@@ -1288,3 +1288,6 @@ a.share-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3
 .title-best { margin: 0; font-size: 0.8rem; color: var(--dim); }
 .title-best b { font-family: var(--f-mono); color: var(--accent-hi); font-weight: 700; }
 .title-start { width: 100%; height: 48px; margin-top: 6px; font-size: 0.95rem; }
+
+/* ホームでは手数・時間は意味がないので隠す（場所は残して、上の帯の並びを動かさない） */
+body:has(#title:not([hidden])) .meters { visibility: hidden; }
