@@ -373,6 +373,8 @@ function render() {
   $('seed').textContent = app.seed;
   $('mode-note').textContent = app.mode.blurb;
   $('course-name').textContent = `${app.mode.name}　${sizeWords(app.mode).option(app.size)}`;
+  $('home-course').textContent = `${app.mode.name}　${sizeWords(app.mode).option(app.size)}`;
+  $('home-best').textContent = bestText();
 
   renderHint(plan);
   renderPlayer();
@@ -1046,6 +1048,28 @@ function openCourse() {
   if (on) on.scrollIntoView({ block: 'center' });
 }
 $('help-open').addEventListener('click', () => openSheet('help'));
+
+// ---- ホーム ----
+// 開いたらまずここを見せる。「はじめる」で今の（コース選択に出ている）盤面へ進み、
+// ヘッダーのロゴでいつでも戻れる。盤面は起動時からずっと組み立ててあるので、
+// ここでは表示を切り替えるだけでよい。
+const titleEl = $('title');
+const playEl = $('play');
+function goHome() {
+  titleEl.hidden = false;
+  playEl.hidden = true;
+}
+function goPlay() {
+  titleEl.hidden = true;
+  playEl.hidden = false;
+  fitBoard();       // 隠れている間は測れないので、見せてから測り直す
+  scrollHints();
+}
+$('home-btn').addEventListener('click', goHome);
+$('home-start').addEventListener('click', goPlay);
+$('home-course-open').addEventListener('click', openCourse);
+$('home-help-open').addEventListener('click', () => openSheet('help'));
+
 for (const id of ['course', 'settings', 'help', 'confirm', 'share-sheet']) {
   // 外側をクリックしても閉じる
   $(id).addEventListener('click', (e) => { if (e.target === $(id)) $(id).close(); });

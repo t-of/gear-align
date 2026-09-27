@@ -37,14 +37,14 @@ history.replaceState(null,'',location.pathname+location.search+(m[2]?'#'+m[2]:''
 <body>
 
 <header class="topbar">
-  <div class="brand">
+  <button id="home-btn" class="brand" type="button" aria-label="ホームへ戻る" title="ホームへ戻る">
     <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
       <path d="M16 3l2.2 3.1 3.7-.9.7 3.7 3.6 1.3-1.4 3.5 2.5 2.9-2.9 2.5 1.4 3.5-3.6 1.3-.7 3.7-3.7-.9L16 29l-2.2-3.1-3.7.9-.7-3.7-3.6-1.3 1.4-3.5L4.7 16l2.5-2.9L5.8 9.6l3.6-1.3.7-3.7 3.7.9Z"/>
       <circle cx="16" cy="16" r="5.2"/>
       <path class="needle" d="M16 8.5l2.2 6.5h-4.4Z"/>
     </svg>
     <h1>GEAR<span>ALIGN</span></h1>
-  </div>
+  </button>
   <div class="meters">
     <span class="meter"><i>手数</i><b id="moves">0</b></span>
     <span class="meter"><i>時間</i><b id="clock">00:00</b></span>
@@ -62,7 +62,24 @@ history.replaceState(null,'',location.pathname+location.search+(m[2]?'#'+m[2]:''
   </div>
 </header>
 
-<main>
+<!-- ホーム -->
+<main class="screen title" id="title">
+  <div class="title-card">
+    <span class="card-kicker">PRECISION GEAR TRAIN</span>
+    <h2 class="title-tag">噛み合った歯車を持ち上げて回し、向きを全部揃える</h2>
+
+    <button id="home-course-open" class="course-btn" type="button" title="コース選択（C）">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4 3.5 6v14L9 18l6 2 5.5-2V4L15 6 9 4Z"/><path d="M9 4v14M15 6v14"/></svg>
+      <span class="course-text"><i>いまのコース</i><b id="home-course">—</b></span>
+    </button>
+    <p class="title-best">ベスト <b id="home-best">—</b></p>
+
+    <button id="home-start" class="primary title-start" type="button">はじめる</button>
+    <button id="home-help-open" class="link" type="button">遊び方</button>
+  </div>
+</main>
+
+<main id="play" hidden>
   <div class="stage" id="stage">
     <!-- 地板：歯車を載せる金属の板。四隅のビスと刻印は飾り -->
     <div class="plate">

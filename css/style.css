@@ -28,6 +28,11 @@
 }
 
 * { box-sizing: border-box; }
+
+/* main { display:flex } と [hidden] は詳細度が同じで後勝ちになり、隠したはずの main が
+   出たままになりうる。ホーム⇔盤面の切り替えで確実に隠すため !important を付ける。 */
+[hidden] { display: none !important; }
+
 html, body { margin: 0; min-height: 100%; }
 /* Safari の上下バーの色は html の背景から取られるので、body と同じ色を html にも塗る（theme-color と同じ） */
 html { background-color: var(--bg); }
@@ -77,6 +82,7 @@ body {
   padding: calc(14px + env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 14px max(16px, env(safe-area-inset-left));
 }
 
+button.brand { background: none; border: none; padding: 0; font: inherit; color: inherit; cursor: pointer; }
 .brand { display: flex; align-items: center; gap: 10px; }
 .logo { width: 26px; height: 26px; flex: none; filter: drop-shadow(0 1px 0 #000); }
 .logo path:first-child { fill: var(--accent); }
@@ -1130,10 +1136,11 @@ a.share-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3
   .meter.dim { display: none; }
   .topbar-actions { gap: 6px; }
   button.icon { width: 32px; height: 32px; }
-  button.course-btn { height: 32px; padding: 0 10px 0 8px; gap: 6px; }
-  .course-btn svg { width: 18px; height: 18px; }
-  .course-text b { display: none; }
-  .course-text i { font-size: 0.68rem; letter-spacing: 0.06em; }
+  /* コース名を出すのは、狭い上のバーではなくホームの大きなカードの役目にする */
+  .topbar-actions button.course-btn { height: 32px; padding: 0 10px 0 8px; gap: 6px; }
+  .topbar-actions .course-btn svg { width: 18px; height: 18px; }
+  .topbar-actions .course-text b { display: none; }
+  .topbar-actions .course-text i { font-size: 0.68rem; letter-spacing: 0.06em; }
 
   main {
     gap: 10px;
@@ -1223,7 +1230,7 @@ a.share-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3
 /* スマホの横向き：盤面を左、操作盤を右に並べて、どちらも 1 画面の高さに収める */
 @media (orientation: landscape) and (max-height: 500px) {
   .topbar { max-width: none; padding: calc(5px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 5px max(12px, env(safe-area-inset-left)); }
-  main {
+  main#play {
     max-width: none;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(270px, 36%);
@@ -1256,3 +1263,28 @@ a.share-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3
   #board.solved #gears, .gear.suggest .mark, button.turn.urge,
   .readout b.prompt::before, .overlay.show, .overlay .card, dialog.sheet[open] { animation: none; }
 }
+
+/* ---- ホーム ---- */
+.title { justify-content: center; align-items: center; min-height: calc(100dvh - 90px); }
+.title-card {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 30px 28px 28px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #1f2227, #121417);
+  border: 1px solid #000;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 0 0 1px rgba(226, 181, 76, 0.35),
+    0 20px 50px var(--shadow);
+}
+.title-tag { margin: 0; font-size: 0.92rem; font-weight: 500; color: var(--dim); line-height: 1.6; }
+.title-card .course-btn { max-width: 100%; }
+.title-best { margin: 0; font-size: 0.8rem; color: var(--dim); }
+.title-best b { font-family: var(--f-mono); color: var(--accent-hi); font-weight: 700; }
+.title-start { width: 100%; height: 48px; margin-top: 6px; font-size: 0.95rem; }
