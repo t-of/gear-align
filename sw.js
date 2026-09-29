@@ -3,6 +3,7 @@
 // 同じサイトのファイルは「ネットを先に見て、つながらなければ保存しておいた版」を返す。
 // つながっていれば常に最新が出るので、更新のたびに版を上げ忘れても古い画面が残らない。
 // 字体（Google Fonts）は変わらないので「保存した版を先に返し、裏で取り直す」。
+// ブラウザの HTTP キャッシュを通さない（install は reload、fetch は no-cache）。古い main.js と新しい index.html が混ざって動かなくなるのを防ぐ。
 
 // 同じサイト（t-of.github.io）の別アプリのキャッシュを消さないよう、名前は必ずこの接頭辞で始める
 const PREFIX = 'gear-align-';
@@ -16,7 +17,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -36,7 +37,7 @@ self.addEventListener('fetch', (e) => {
 async function networkFirst(req) {
   const cache = await caches.open(CACHE);
   try {
-    const res = await fetch(req);
+    const res = await fetch(req, { cache: 'no-cache' });
     if (res.ok) cache.put(req, res.clone());
     return res;
   } catch {
