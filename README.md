@@ -197,6 +197,34 @@ Chrome・Edge・Safari で開くと、**アプリとしてホーム画面・ア�
 - Chrome の開発者向けプロトコル（`Page.getInstallabilityErrors`）で「インストールできない理由：なし」、
   サービスワーカーが動いて 19 ファイルを保存していること、**ネットを切って開き直しても盤面が出ること**を確かめた
 
+## 無料と完全版（iOS 版だけ）
+
+Web 版は今までどおり全部遊べる。鍵が効くのは iOS アプリ（Capacitor）の中だけ（`src/entitlement.js`。2026-10-31 オーナー）。
+
+| | 無料版 | 完全版（¥500・1 回の買い切り） |
+|---|---|---|
+| コース | 「やさしい」「ふつう」の 9 通り（37 ステージ） | 「むずかしい」「鬼」の 12 通り（43 ステージ）も |
+| 揃える向き | 自由だけ | 向きの指定・全部ちがう向きも |
+| 持ち上げる数・ヒント・自動で解く・シェア | すべて | すべて |
+| 広告 | 自分で揃えたクリア（自動で解いた盤は数えない）の 6 回目から 3 回に 1 回、全画面。クリアの画面を離れるとき（次の盤面・同じ盤面をもう一度・ホーム）に出す | なし |
+| ごほうび広告 | 見ると鍵つきのコース・ルールの盤を 1 回遊べる（貯めない） | — |
+
+- 鍵つきのコース・ルールを選ぶと、選ばずに「完全版で遊べます」の案内を開く。URL の `#…` で鍵つきの盤が来たら最初のコースにする。
+- 購入・復元のボタンと広告は iOS 版（`~/GitHub/tof/ios/gear-align` の `native/native.js`）がつなぐ。Web 版では押せず「iPhone のアプリで購入できます」。
+- 広告の回数の判定は `src/rewards.js`。クリアのたびに `gearalign:clear`、出す回のクリアを離れるときに `gearalign:interstitial` を送る。
+- 確かめ方: localhost だけ `?locks=1`（鍵を効かせる）と `?locks=1&full=1`（完全版）。`node test/entitlement.test.mjs` が分け方を数える。
+
+## データ
+
+端末の localStorage だけ（キーは `gear-align:` で始まる）。外には送らない。
+
+- `gear-align:<コースの id>:<大きさ>` … 自己ベスト `{"moves": 手数, "ms": ミリ秒}`
+- `gear-align:sound` … 音の入切（`1` / `0`）
+- `gear-align:full` … 完全版か（`1` / `0`）。iOS 版で、ストアの答えが来る前の表示の控え。答えが来たらそちらを信じる
+- `gear-align:adClears` … 自分で揃えた回数（通算。全画面広告の回を決める）
+
+iOS 版は、同じキーを端末の UserDefaults（Capacitor の Preferences）にも控える。iOS 版の無料版だけ、広告（Google AdMob）が端末の情報を Google に送る（https://t-of.github.io/privacy/ ）。
+
 ## 開発
 
 ```
@@ -210,6 +238,7 @@ ES モジュールを使うので `file://` では動かない。ローカルサ
 ```
 node test/logic.test.mjs     # 規則と幾何
 node test/solve.test.mjs     # 手順の正しさと最短性
+node test/entitlement.test.mjs  # 無料と完全版の分け方、全画面広告の回
 ./serve.sh                   # そのうえで http://localhost:8000/test/ui.html
 ```
 

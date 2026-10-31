@@ -107,6 +107,7 @@ history.replaceState(null,'',location.pathname+location.search+(m[2]?'#'+m[2]:''
         <div class="row share-row">
           <button id="share-result" class="share-btn">結果をシェア</button>
         </div>
+        <a class="privacy-link" id="ad-privacy" href="https://t-of.github.io/privacy/" target="_blank" rel="noopener" hidden>プライバシーポリシー</a>
       </div>
     </div>
   </div>
@@ -222,6 +223,14 @@ history.replaceState(null,'',location.pathname+location.search+(m[2]?'#'+m[2]:''
       </div>
     </div>
 
+    <div class="field" id="full-field" hidden>
+      <span>完全版</span>
+      <div class="row">
+        <b class="full-state" id="full-state">¥500・1 回の買い切り</b>
+        <button id="full-about" class="link" type="button">完全版について</button>
+      </div>
+    </div>
+
     <div class="field install">
       <span>アプリ</span>
       <div class="install-box">
@@ -253,6 +262,30 @@ history.replaceState(null,'',location.pathname+location.search+(m[2]?'#'+m[2]:''
         <a href="/" class="credit">T.OF...</a> のアプリ一覧・<a href="https://t-of.github.io/contact/" class="credit">問い合わせ</a>
       </div>
     </div>
+  </div>
+</dialog>
+
+<!-- 完全版の案内（iOS 版で鍵つきのコース・ルールを選んだとき） -->
+<dialog id="lock-sheet" class="sheet narrow">
+  <form method="dialog" class="sheet-head">
+    <h2>完全版で遊べます</h2>
+    <button class="icon" aria-label="閉じる">×</button>
+  </form>
+  <div class="sheet-body lock-body">
+    <p class="lock-price">¥500・1 回の買い切り</p>
+    <ul class="lock-list">
+      <li>「むずかしい」「鬼」の 12 コース（43 ステージ）。歯数が 3〜6 種類混ざる一列・輪・星など</li>
+      <li>追加ルール「向きの指定」「全部ちがう向き」</li>
+      <li>広告が出なくなります</li>
+    </ul>
+    <p class="lock-note">購入すると上の内容がすぐに開きます。支払いは Apple の購入画面で行い、返金は Apple の決まりに従います。</p>
+    <p class="lock-status" id="lock-status" role="status" aria-live="polite">iPhone のアプリで購入できます。</p>
+    <p class="lock-owned" id="lock-owned" role="status" hidden>購入済みです。ありがとうございます。</p>
+    <button class="primary wide" id="lock-buy" type="button" disabled>購入（iPhone のアプリで）</button>
+    <button class="wide" id="lock-restore" type="button" disabled>購入を復元（iPhone のアプリで）</button>
+    <p class="lock-note" id="lock-reward-note" hidden>広告を見ると、<span id="lock-reward-what">このコース</span>を 1 回遊べます。</p>
+    <button class="wide" id="lock-reward" type="button" hidden>広告を見て 1 回遊ぶ</button>
+    <a class="privacy-link" id="lock-privacy" href="https://t-of.github.io/privacy/" target="_blank" rel="noopener" hidden>プライバシーポリシー</a>
   </div>
 </dialog>
 

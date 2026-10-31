@@ -8,6 +8,8 @@ import {
 import { planFor, solvableDirections } from './solve.js';
 import { mulberry32, randomSeed, normalizeSeed, seedNumber } from './rng.js';
 import * as sound from './sound.js';
+import * as Ent from './entitlement.js';
+import * as Rewards from './rewards.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 const PAD = 30;
@@ -660,6 +662,7 @@ function win() {
   const prev = loadBest();
   const better = !prev || rec.moves < prev.moves || (rec.moves === prev.moves && rec.ms < prev.ms);
   if (better && !app.assisted) saveBest(rec);
+  if (!app.assisted) adDue = Rewards.recordClear().due;
   $('win-title').textContent = p.goalMode === 'distinct' ? 'できました' : 'そろいました';
   $('result').textContent = p.goalMode === 'distinct'
     ? `${p.moves} 手 / ${clockText(app.elapsed)}　全部ちがう向き`
@@ -671,12 +674,16 @@ function win() {
   render();
 }
 
+// 鍵つき（完全版）のコース・ルールなら配らずに案内を開き、false を返す
 function newBoard(seed = randomSeed()) {
+  if (!playable()) { openLock(); return false; }
   app.auto = false;
   app.anim = ANIM;
   app.seed = normalizeSeed(seed);
   build();
   writeHash();
+  leaveClear();   // 次の盤面を出してから。広告はその上に出て、閉じれば続きから遊べる
+  return true;
 }
 
 // 「揃える向き」の選択肢はステージごとに変わる。
@@ -695,14 +702,14 @@ function fillGoals() {
   const ok = [];
   for (let i = 0; i < 8; i++) {
     if (!Number.isInteger((i * 45 * probe.G) / 360)) continue;
-    add(String(i), `${GOAL_ARROWS[i]} ${GOAL_NAMES[i]}`);
+    add(String(i), `${GOAL_ARROWS[i]} ${GOAL_NAMES[i]}${lockMark(i)}`);
     ok.push(i);
   }
   // かき混ぜても目標のままになる盤面では遊べないので、実際に配ってみて確かめる
   const probeD = new GearPuzzle(layout, 1);
   probeD.goalMode = 'distinct';
   const canDistinct = probeD.distinctGoal() !== null && shuffleFor(probeD, app.seed);
-  if (canDistinct) add('d', '全部ちがう向き');
+  if (canDistinct) add('d', `全部ちがう向き${lockMark('d')}`);
   if (app.goal === 'd' ? !canDistinct : app.goal !== null && !ok.includes(app.goal)) app.goal = null;
   sel.value = app.goal === null ? 'f' : String(app.goal);
 }
@@ -738,6 +745,8 @@ function readHash() {
   app.mode = mode; app.size = size; app.lifts = Number(m[3]);
   app.goal = m[4] === 'f' ? null : m[4] === 'd' ? 'd' : Number(m[4]);
   app.seed = normalizeSeed(m[5]);
+  // 鍵つきのコース・ルール（iOS 版の無料）は開かず、最初のコースにする
+  if (!playable()) { app.mode = MODES[0]; app.size = MODES[0].size; app.lifts = 1; app.goal = null; }
   return true;
 }
 
@@ -878,7 +887,7 @@ $('player-close').addEventListener('click', closeReplay);
 $('shuffle').addEventListener('click', () => newBoard());
 $('again').addEventListener('click', () => newBoard());
 // 同じシードから作り直すので、まったく同じ盤面が出る
-$('retry').addEventListener('click', () => { app.auto = false; app.anim = ANIM; build(); });
+$('retry').addEventListener('click', () => { app.auto = false; app.anim = ANIM; build(); leaveClear(); });
 
 $('hint').addEventListener('click', () => {
   app.hint = !app.hint;
@@ -907,15 +916,33 @@ $('sound').addEventListener('click', () => {
   if (on) sound.lift();
 });
 
-$('lifts').addEventListener('change', (e) => { app.lifts = Number(e.target.value); newBoard(); });
+$('lifts').addEventListener('change', (e) => {
+  const was = app.lifts;
+  app.lifts = Number(e.target.value);
+  if (!newBoard()) { app.lifts = was; e.target.value = String(was); }
+});
 $('goal').addEventListener('change', (e) => {
   const v = e.target.value;
-  app.goal = v === 'f' ? null : v === 'd' ? 'd' : Number(v);
+  const goal = v === 'f' ? null : v === 'd' ? 'd' : Number(v);
+  // 鍵つきのルールは選ばず、案内を開く（選択は元に戻す）
+  if (!Ent.goalOpen(goal)) {
+    e.target.value = app.goal === null ? 'f' : String(app.goal);
+    openLock({ mode: app.mode, size: app.size, goal });
+    return;
+  }
+  app.goal = goal;
   newBoard();
 });
 $('mesh').addEventListener('change', (e) => {
   const [id, size] = e.target.value.split('/');
-  app.mode = getMode(id);
+  const mode = getMode(id);
+  // 鍵つきのコースは選ばず、案内を開く（選択は元に戻す）
+  if (!Ent.courseOpen(mode)) {
+    checkStage(app.mode.id, app.size);
+    openLock({ mode, size: Number(size), goal: app.goal });
+    return;
+  }
+  app.mode = mode;
   app.size = Number(size);
   checkStage(app.mode.id, app.size);
   fillLifts();
@@ -1058,6 +1085,7 @@ const playEl = $('play');
 function goHome() {
   titleEl.hidden = false;
   playEl.hidden = true;
+  if (overlay.classList.contains('show')) leaveClear();
 }
 function goPlay() {
   titleEl.hidden = true;
@@ -1070,7 +1098,7 @@ $('home-start').addEventListener('click', goPlay);
 $('home-course-open').addEventListener('click', openCourse);
 $('home-help-open').addEventListener('click', () => openSheet('help'));
 
-for (const id of ['course', 'settings', 'help', 'confirm', 'share-sheet']) {
+for (const id of ['course', 'settings', 'help', 'confirm', 'share-sheet', 'lock-sheet']) {
   // 外側をクリックしても閉じる
   $(id).addEventListener('click', (e) => { if (e.target === $(id)) $(id).close(); });
 }
@@ -1194,6 +1222,81 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   });
 }
 
+// ---- 完全版の鍵と広告（iOS 版だけ。Web 版では鍵も広告も無い）----------
+// 分け方は src/entitlement.js。購入・復元のボタンと広告は iOS 版の native.js がつなぐ。
+
+const playable = () => Ent.courseOpen(app.mode) && Ent.goalOpen(app.goal);
+const lockMark = (goal) => (Ent.goalOpen(goal) ? '' : '（完全版）');
+
+let adDue = false;   // このクリアの画面を離れるときに全画面広告を出す回か（rewards.js が数える）
+function leaveClear() {
+  if (!adDue) return;
+  adDue = false;
+  Rewards.requestInterstitial();
+}
+
+// 一覧の鍵の札と、設定の「完全版」の欄・広告のプライバシーポリシーを今の状態に合わせる
+function syncLocks() {
+  for (const group of $('mesh').querySelectorAll('.stage-group')) {
+    const locked = !Ent.courseOpen(getMode(group.dataset.mode));
+    group.querySelector('.lock-tag').hidden = !locked;
+    for (const tile of group.querySelectorAll('.tile')) tile.classList.toggle('locked', locked);
+  }
+  $('full-field').hidden = !Ent.locksActive();
+  $('full-state').textContent = Ent.isFull() ? '購入済み。ありがとうございます' : '¥500・1 回の買い切り';
+  $('ad-privacy').hidden = $('lock-privacy').hidden = !Ent.adsActive();
+  $('lock-owned').hidden = !Ent.isFull();
+  $('lock-buy').hidden = Ent.isFull();
+}
+
+// what: 遊ぼうとした盤 { mode, size, goal }。ごほうび広告を見たら、その盤を 1 回だけ配る。
+// 設定の「完全版について」から開いたとき（null）は、遊ぶ盤が無いのでごほうびは出さない
+let lockWhat = null;
+function openLock(what = { mode: app.mode, size: app.size, goal: app.goal }) {
+  lockWhat = what;
+  const can = !!what && Rewards.available() && Ent.adsActive();
+  $('lock-reward').hidden = $('lock-reward-note').hidden = !can;
+  if (what) $('lock-reward-what').textContent = Ent.courseOpen(what.mode) ? 'このルールの盤面' : 'このコース';
+  syncLocks();
+  openSheet('lock-sheet');
+}
+$('full-about').addEventListener('click', () => openLock(null));
+
+// 完全版になったら、一覧と選択肢の鍵をその場で外す（案内も閉じる）
+Ent.onChange(() => {
+  if ($('lock-sheet').open) $('lock-sheet').close();
+  syncLocks();
+  fillGoals();
+});
+syncLocks();
+
+let rewardBusy = false;
+$('lock-reward').addEventListener('click', async () => {
+  if (rewardBusy || !lockWhat) return;
+  rewardBusy = true;
+  $('lock-reward').disabled = true;
+  const what = lockWhat;
+  try {
+    const r = await Rewards.watch();
+    if (r === 'earned' && !Ent.isFull()) {
+      Ent.grantTicket();   // 次に配る 1 盤だけ鍵が開く
+      app.mode = what.mode; app.size = what.size; app.goal = what.goal;
+      checkStage(app.mode.id, app.size);
+      fillLifts();
+      fillGoals();
+      newBoard();
+      Ent.useTicket();     // 配ったら使い切り（貯めない）
+      fillGoals();
+      for (const id of ['lock-sheet', 'course']) if ($(id).open) $(id).close();
+      goPlay();
+    } else {
+      $('lock-status').textContent = r === 'failed'
+        ? '広告を読み込めませんでした。時間をおいてもう一度お試しください。'
+        : '広告を最後まで見ると遊べます。';
+    }
+  } finally { rewardBusy = false; $('lock-reward').disabled = false; }
+});
+
 // ---- 起動 --------------------------------------------------------------
 
 // 盤面は言葉だけだと想像しづらいので、並べ方 × 大きさを全部ステージとして並べ、
@@ -1213,7 +1316,8 @@ function buildPicker() {
     const ang = angles.length === 1 ? `${angles[0]}°`
       : angles.length === 2 ? `${angles[0]}/${angles[1]}°`
       : `${angles[0]}〜${angles[angles.length - 1]}°`;
-    head.innerHTML = `<b>${m.name}</b><em>${m.rank}・1 手 ${ang}</em>`;
+    head.innerHTML = `<b>${m.name}</b><em>${m.rank}・1 手 ${ang}</em><span class="lock-tag" hidden>完全版</span>`;
+    group.dataset.mode = m.id;
     group.appendChild(head);
 
     const row = document.createElement('div');
@@ -1266,6 +1370,7 @@ function checkStage(id, size) {
   }
 }
 buildPicker();
+syncLocks();
 
 if (!readHash()) app.seed = randomSeed();
 checkStage(app.mode.id, app.size);

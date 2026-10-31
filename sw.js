@@ -7,11 +7,11 @@
 
 // 同じサイト（t-of.github.io）の別アプリのキャッシュを消さないよう、名前は必ずこの接頭辞で始める
 const PREFIX = 'gear-align-';
-const CACHE = PREFIX + 'v1';
+const CACHE = PREFIX + 'v2';
 const SHELL = [
   './', './index.html', './manifest.json', './css/style.css',
   './src/main.js', './src/puzzle.js', './src/modes.js', './src/layout.js', './src/gear.js',
-  './src/solve.js', './src/lattice.js', './src/rng.js', './src/sound.js',
+  './src/solve.js', './src/lattice.js', './src/rng.js', './src/sound.js', './src/entitlement.js', './src/rewards.js',
   './icons/icon.svg', './icons/icon-192.png', './icons/icon-512.png',
   './icons/maskable-512.png', './icons/apple-touch-icon.png', './icons/favicon-32.png',
 ];

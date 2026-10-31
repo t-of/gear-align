@@ -1291,3 +1291,32 @@ a.share-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3
 
 /* ホームでは手数・時間は意味がないので隠す（場所は残して、上の帯の並びを動かさない） */
 body:has(#title:not([hidden])) .meters { visibility: hidden; }
+
+/* ---- 完全版の鍵（iOS 版だけ。Web 版では出ない） ---- */
+.lock-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 1px 7px; border-radius: 999px;
+  border: 1px solid rgba(232, 189, 92, 0.45);
+  color: var(--accent-hi); font-family: var(--f-body); font-style: normal;
+  font-size: 0.64rem; letter-spacing: 0.04em;
+}
+.lock-tag::before {
+  content: ""; width: 8px; height: 9px; flex: none;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 9'%3E%3Cpath d='M2 4V2.6a2 2 0 0 1 4 0V4h.6c.2 0 .4.2.4.4v4.2c0 .2-.2.4-.4.4H1.4a.4.4 0 0 1-.4-.4V4.4c0-.2.2-.4.4-.4Zm1 0h2V2.6a1 1 0 0 0-2 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 9'%3E%3Cpath d='M2 4V2.6a2 2 0 0 1 4 0V4h.6c.2 0 .4.2.4.4v4.2c0 .2-.2.4-.4.4H1.4a.4.4 0 0 1-.4-.4V4.4c0-.2.2-.4.4-.4Zm1 0h2V2.6a1 1 0 0 0-2 0Z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+.lock-tag[hidden] { display: none; }
+.tile.locked .prev, .tile.locked .nm { opacity: 0.4; }
+.lock-body { gap: 0; }
+.lock-price { margin: 0 0 10px; font-size: 0.95rem; font-weight: 700; color: var(--accent-hi); }
+.lock-list { margin: 0; padding-left: 18px; font-size: 0.8rem; color: var(--dim); line-height: 1.8; }
+.lock-note { margin: 12px 0 0; font-size: 0.74rem; color: var(--dim); line-height: 1.7; }
+.lock-status { margin: 10px 0 0; min-height: 1.6em; font-size: 0.8rem; line-height: 1.6; }
+.lock-status[data-kind="error"] { color: #ff9a8a; }
+.lock-owned { margin: 10px 0 0; font-size: 0.85rem; font-weight: 700; color: var(--accent-hi); }
+.lock-body button.wide { width: 100%; margin-top: 10px; }
+.lock-body [hidden] { display: none; }
+.full-state { font-weight: 600; font-size: 0.8rem; }
+.privacy-link { display: block; margin: 12px 0 0; text-align: center; font-size: 0.72rem; color: var(--dim); text-decoration: underline; }
+.privacy-link[hidden] { display: none; }
